@@ -36,7 +36,7 @@ async function bootstrap() {
 
   const whitelist = [
     //allow localhost
-    'http://localhost:3050',
+    'http://localhost:3000',
     //allow frontend to access
     //'https://movie.frontend.com',
   ];

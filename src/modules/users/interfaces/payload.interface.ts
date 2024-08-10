@@ -1,8 +1,7 @@
-import { Roles } from '../enum/roles.enum';
+import { Role } from '../enum/role.enum';
 
-// payload interface
 export interface PayloadInterface {
   _id: string;
-  userName: string;
-  role: Roles;
+  username: string;
+  role: Role;
 }
