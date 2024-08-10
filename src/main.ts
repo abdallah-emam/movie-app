@@ -6,11 +6,15 @@ import * as basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
+import { AllExceptionsFilter } from './errors/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+
+  // add global filters for catching all exceptions comes from mongoose validator
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const authOptions = {
     challenge: true,
