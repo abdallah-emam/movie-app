@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppLoggerMiddleware } from './middlewares/logger.middleware';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { AppLoggerMiddleware } from './middlewares/logger.middleware';
         dbName: 'movieAPIs',
       }),
     }),
+    UsersModule,
   ],
   controllers: [],
   providers: [],
