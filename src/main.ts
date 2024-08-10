@@ -6,7 +6,7 @@ import * as basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './errors/all-exceptions.filter';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
