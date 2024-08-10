@@ -7,7 +7,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Role } from './enum/role.enum';
 import { PayloadInterface } from './interfaces/payload.interface';
@@ -19,21 +18,18 @@ export class UsersService {
     private jwtService: JwtService,
   ) {}
 
-  async assignToken(payload: PayloadInterface) {
-    const token = await this.jwtService.sign(payload, {
+  assignToken(payload: PayloadInterface) {
+    return this.jwtService.sign(payload, {
       expiresIn: '5d',
     });
-    return token;
   }
 
-  async SignUp(registerDto: RegisterDto) {
-    console.log('🚀 ~ UsersService ~ SignUp ~ registerDto:', registerDto);
+  async register(registerDto: RegisterDto) {
     const existUsername = await this.userModel.findOne({
       username: registerDto.username,
       removed: false,
       role: Role.USER,
     });
-    console.log('🚀 ~ UsersService ~ SignUp ~ existUsername:', existUsername);
     if (existUsername) throw new BadRequestException('Username Already Exist');
 
     if (registerDto.password.localeCompare(registerDto.confirmPassword) !== 0)
@@ -56,7 +52,7 @@ export class UsersService {
       },
     };
   }
-  async Login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto) {
     const user = await this.userModel.findOne({
       username: loginDto.username,
       removed: false,
@@ -83,19 +79,19 @@ export class UsersService {
     };
   }
 
-  findAll() {
-    return `This action returns all users`;
-  }
+  // findAll() {
+  //   return `This action returns all users`;
+  // }
 
   findOneById(id: string) {
     return this.userModel.findById(id);
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+  // update(id: number, updateUserDto: UpdateUserDto) {
+  //   return `This action updates a #${id} user`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} user`;
+  // }
 }

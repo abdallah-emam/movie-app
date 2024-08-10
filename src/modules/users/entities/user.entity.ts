@@ -1,12 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
-import { Document, HydratedDocument } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { Role } from '../enum/role.enum';
 
 export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
-export class User extends Document {
+export class User {
+  constructor(userData: { username: string; password: string }) {
+    this.username = userData.username;
+    this.password = userData.password;
+    // Other properties
+  }
   _id: string;
 
   @Prop({ type: String, unique: true })
