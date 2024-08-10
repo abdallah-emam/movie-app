@@ -2,7 +2,10 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
+import { APP_GUARD } from '@nestjs/core';
 import { AppLoggerMiddleware } from './middlewares/logger.middleware';
+import { RolesGuard } from './modules/users/guard/roles.guard';
+import { JwtAuthGuard } from './modules/users/guard/user.guard';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
@@ -22,7 +25,16 @@ import { UsersModule } from './modules/users/users.module';
     UsersModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer): void {

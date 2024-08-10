@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import * as bcrypt from 'bcryptjs';
 import { Document, HydratedDocument } from 'mongoose';
+import { Roles } from '../enum/roles.enum';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -16,6 +17,9 @@ export class User extends Document {
 
   @Prop({ type: String })
   name: string;
+
+  @Prop({ type: String, enum: Roles, default: Roles.USER })
+  role: Roles;
 
   @Prop({
     type: Boolean,

@@ -22,7 +22,8 @@ import { UsersService } from './users.service';
       signOptions: { expiresIn: '5d' },
     }),
   ],
-  controllers: [UsersController, JwtStrategy],
+  controllers: [UsersController],
   providers: [UsersService, JwtStrategy],
+  exports: [UsersService, JwtStrategy],
 })
 export class UsersModule {}
