@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { UserDto, UserResponseDto } from './dto/response.dto';
+import { UserResponseDto, UserSerializerDto } from './dto/response.dto';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -8,7 +8,7 @@ describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
 
-  let data = new UserDto();
+  let data = new UserSerializerDto();
   data = {
     _id: '1',
     createdAt: new Date(),
@@ -18,6 +18,7 @@ describe('UsersController', () => {
     role: 'user',
     token: 'token',
     removed: false,
+    favoriteMovies: [],
   };
   let mockUserResponseDto = new UserResponseDto();
 
