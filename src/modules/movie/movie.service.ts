@@ -16,6 +16,7 @@ export class MovieService {
 
   constructor(@InjectModel('Movie') private readonly movieModel: Model<Movie>) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
+    // this.fetchAndStoreMovies();
   }
 
   private async fetchGenres(): Promise<{ [key: number]: string }> {
@@ -57,8 +58,9 @@ export class MovieService {
             overview: movie.overview,
             releaseDate: movie.release_date,
             genres: movie.genre_ids.map((id) => genreMap[id]), // Convert genre IDs to names
-            rating: movie.vote_average,
+            averageRating: movie.vote_average,
             type: 'popular',
+            tmdbRating: movie.vote_average,
           });
           await movieDocument.save();
           // this.logger.log(`Movie "${movie.title}" added to the database. `);
@@ -74,6 +76,28 @@ export class MovieService {
     this.logger.verbose('Movies successfully stored in MongoDB database.');
   }
 
+  async rateMovie(_id: string, rating: number): Promise<Movie> {
+    if (rating < 0 || rating > 10) {
+      throw new BadRequestException('Rating must be between 0 and 10');
+    }
+
+    const movie = await this.movieModel.findOne({ _id });
+
+    if (!movie) {
+      throw new BadRequestException('Movie not found');
+    }
+
+    movie.userRatings.push(rating);
+    const totalRatings = movie.userRatings.length;
+    const userRatingSum = movie.userRatings.reduce((acc, val) => acc + val, 0);
+    movie.averageRating =
+      (userRatingSum + movie.tmdbRating) / (totalRatings + 1);
+
+    await movie.save();
+
+    return movie;
+  }
+
   create(createMovieDto: CreateMovieDto) {
     return this.movieModel.create(createMovieDto);
   }
@@ -85,7 +109,10 @@ export class MovieService {
     limit,
     sort,
     genre,
-  }: PaginationWithFilterDto) {
+  }: PaginationWithFilterDto): Promise<any> {
+    if (!sort) {
+      sort = '-releaseDate';
+    }
     const search = { field: searchField, text: searchText };
     let match: any = {
       removed: false,
@@ -100,6 +127,21 @@ export class MovieService {
     const data = await this.movieModel.aggregate([
       {
         $match: match,
+      },
+      {
+        $addFields: {
+          averageRating: { $ifNull: ['$averageRating', 0] },
+        },
+      },
+      {
+        $project: {
+          userRatings: 0,
+          tmdbRating: 0,
+          removed: 0,
+          __v: 0,
+          createdAt: 0,
+          updatedAt: 0,
+        },
       },
       ...aggregationPipeline(search, sort),
       {

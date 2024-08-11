@@ -32,8 +32,15 @@ export class Movie {
   @Prop({ type: [String] })
   genres: string[];
 
-  @Prop({ type: Number })
-  rating: number;
+  @Prop({ type: [Number], default: [] })
+  userRatings: number[]; // Array to store individual user ratings
+
+  @Prop({ type: Number, default: 0 })
+  averageRating: number;
+
+  //tmdbRating
+  @Prop({ type: Number, default: 0 })
+  tmdbRating: number;
 
   @Prop({ type: Boolean, default: false })
   removed: boolean;

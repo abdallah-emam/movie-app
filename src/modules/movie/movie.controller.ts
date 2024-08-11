@@ -14,6 +14,7 @@ import { Roles } from 'src/common/decorators/roles.decorators';
 import { PaginationWithFilterDto } from 'src/utilities/classes';
 import { Role } from '../users/enum/role.enum';
 import { CreateMovieDto } from './dto/create-movie.dto';
+import { RatingBodyDto } from './dto/ratingBody.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MovieService } from './movie.service';
 
@@ -56,5 +57,11 @@ export class MovieController {
   @ApiOperation({ summary: 'Delete movie by id for admin only' })
   remove(@Param('id') id: string) {
     return this.movieService.remove(id);
+  }
+
+  @Post(':id/rate')
+  @Roles(Role.USER)
+  async rateMovie(@Param('id') id: string, @Body() { rating }: RatingBodyDto) {
+    return this.movieService.rateMovie(id, rating);
   }
 }
