@@ -7,6 +7,7 @@ import { AppLoggerMiddleware } from './middlewares/logger.middleware';
 import { RolesGuard } from './modules/users/guard/roles.guard';
 import { JwtAuthGuard } from './modules/users/guard/user.guard';
 import { UsersModule } from './modules/users/users.module';
+import { MovieModule } from './modules/movie/movie.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { UsersModule } from './modules/users/users.module';
       }),
     }),
     UsersModule,
+    MovieModule,
   ],
   controllers: [],
   providers: [
