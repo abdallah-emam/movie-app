@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import { Model } from 'mongoose';
 import { PaginationWithFilterDto } from 'src/utilities/classes';
@@ -11,8 +12,8 @@ import { Movie } from './entities/movie.entity';
 @Injectable()
 export class MovieService {
   TMDB_API_KEY: string;
-
   private readonly logger = new Logger(MovieService.name);
+
   constructor(@InjectModel('Movie') private readonly movieModel: Model<Movie>) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
   }
@@ -29,6 +30,10 @@ export class MovieService {
     return genreMap;
   }
 
+  // this method will be run at 3 AM Egypt time
+  @Cron('0 3 * * *', {
+    timeZone: 'Africa/Cairo',
+  })
   async fetchAndStoreMovies() {
     const genreMap = await this.fetchGenres();
     let page = 1;
@@ -66,7 +71,7 @@ export class MovieService {
       page++;
     }
 
-    this.logger.log('Movies successfully stored in MongoDB database.');
+    this.logger.verbose('Movies successfully stored in MongoDB database.');
   }
 
   create(createMovieDto: CreateMovieDto) {
@@ -81,7 +86,6 @@ export class MovieService {
     sort,
     genre,
   }: PaginationWithFilterDto) {
-    console.log('🚀 ~ MovieService ~ genre:', genre);
     const search = { field: searchField, text: searchText };
     let match: any = {
       removed: false,
