@@ -7,11 +7,6 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema({ timestamps: true })
 export class User {
-  constructor(userData: { username: string; password: string }) {
-    this.username = userData.username;
-    this.password = userData.password;
-    // Other properties
-  }
   _id: string;
 
   @Prop({ type: String, unique: true })
@@ -25,6 +20,9 @@ export class User {
 
   @Prop({ type: String, enum: Role, default: Role.USER })
   role: Role;
+
+  @Prop({ type: [String], default: [] }) // array of movie ids
+  favoriteMovies: string[];
 
   @Prop({
     type: Boolean,

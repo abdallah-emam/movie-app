@@ -2,9 +2,10 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { PaginationWithFilterDto } from 'src/utilities/classes';
 import { aggregationPipeline } from 'src/utilities/helper';
+import { UserDocument } from '../users/entities/user.entity';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
@@ -102,14 +103,17 @@ export class MovieService {
     return this.movieModel.create(createMovieDto);
   }
 
-  async findAll({
-    searchField,
-    searchText,
-    page,
-    limit,
-    sort,
-    genre,
-  }: PaginationWithFilterDto): Promise<any> {
+  async findAll(
+    {
+      searchField,
+      searchText,
+      page,
+      limit,
+      sort,
+      genre,
+    }: PaginationWithFilterDto,
+    user: UserDocument,
+  ): Promise<any> {
     if (!sort) {
       sort = '-releaseDate';
     }
@@ -131,6 +135,12 @@ export class MovieService {
       {
         $addFields: {
           averageRating: { $ifNull: ['$averageRating', 0] },
+          isFavorite: {
+            $in: [
+              '$_id',
+              user.favoriteMovies.map((id) => new mongoose.Types.ObjectId(id)),
+            ],
+          },
         },
       },
       {

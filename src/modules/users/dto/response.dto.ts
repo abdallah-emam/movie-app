@@ -1,6 +1,6 @@
 import { Exclude, Expose, Transform, Type } from 'class-transformer';
 import { IsOptional, IsString } from 'class-validator';
-export class UserDto {
+export class UserSerializerDto {
   @Transform((value) => {
     return value.obj._id?.toString();
   })
@@ -29,6 +29,10 @@ export class UserDto {
   removed: boolean;
 
   @IsOptional()
+  @Expose()
+  favoriteMovies: string[];
+
+  @IsOptional()
   @IsString()
   @Expose()
   token: string;
@@ -39,9 +43,9 @@ export class UserDto {
 }
 
 export class UserResponseDto {
-  @Type(() => UserDto)
+  @Type(() => UserSerializerDto)
   @Expose()
-  data: UserDto;
+  data: UserSerializerDto;
 
   @Expose()
   message: string;

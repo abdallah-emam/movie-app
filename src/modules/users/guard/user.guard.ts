@@ -14,9 +14,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
       context.getClass(),
     ]);
     if (isPublic) {
-      return true; // Allow access to public routes without authentication * how to solve conflicts *
+      return true;
     }
 
-    return super.canActivate(context); // Use the regular JwtAuthGuard for protected routes * how to solve conflicts *
+    return super.canActivate(context);
   }
 }

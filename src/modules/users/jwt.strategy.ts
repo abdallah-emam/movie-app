@@ -11,7 +11,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private readonly userService: UsersService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: `${process.env.JWT_SECRET}`,
+      secretOrKey: `secret`,
+      ignoreExpiration: false,
     });
   }
 
@@ -22,6 +23,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid user');
     }
 
-    return payload;
+    return user;
   }
 }

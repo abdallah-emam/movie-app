@@ -9,9 +9,10 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/common/decorators/public.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { Roles } from 'src/common/decorators/roles.decorators';
 import { PaginationWithFilterDto } from 'src/utilities/classes';
+import { UserDocument } from '../users/entities/user.entity';
 import { Role } from '../users/enum/role.enum';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { RatingBodyDto } from './dto/ratingBody.dto';
@@ -32,14 +33,18 @@ export class MovieController {
   }
 
   @Get('/all')
-  @Public()
+  @Roles(Role.USER)
   @ApiOperation({ summary: 'Get all movies' })
-  findAll(@Query() query: PaginationWithFilterDto) {
-    return this.movieService.findAll(query);
+  findAll(
+    @GetUser() user: UserDocument,
+    @Query() query: PaginationWithFilterDto,
+  ) {
+    console.log('🚀 ~ MovieController ~ findOne ~ user:', user);
+    return this.movieService.findAll(query, user);
   }
 
   @Get(':id')
-  @Public()
+  @Roles(Role.USER)
   @ApiOperation({ summary: 'Get movie by id' })
   findOne(@Param('id') id: string) {
     return this.movieService.findOne(id);
