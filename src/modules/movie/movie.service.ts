@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import axios from 'axios';
 import { Model } from 'mongoose';
-import { PaginationDto } from 'src/utilities/classes';
+import { PaginationWithFilterDto } from 'src/utilities/classes';
 import { aggregationPipeline } from 'src/utilities/helper';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -73,14 +73,29 @@ export class MovieService {
     return this.movieModel.create(createMovieDto);
   }
 
-  async findAll({ searchField, searchText, page, limit, sort }: PaginationDto) {
+  async findAll({
+    searchField,
+    searchText,
+    page,
+    limit,
+    sort,
+    genre,
+  }: PaginationWithFilterDto) {
+    console.log('🚀 ~ MovieService ~ genre:', genre);
     const search = { field: searchField, text: searchText };
+    let match: any = {
+      removed: false,
+    };
+    if (genre) {
+      match = {
+        ...match,
+        genres: { $in: [genre] },
+      };
+    }
 
     const data = await this.movieModel.aggregate([
       {
-        $match: {
-          removed: false,
-        },
+        $match: match,
       },
       ...aggregationPipeline(search, sort),
       {

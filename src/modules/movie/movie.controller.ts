@@ -11,7 +11,7 @@ import {
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from 'src/common/decorators/public.decorator';
 import { Roles } from 'src/common/decorators/roles.decorators';
-import { PaginationDto } from 'src/utilities/classes';
+import { PaginationWithFilterDto } from 'src/utilities/classes';
 import { Role } from '../users/enum/role.enum';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -33,7 +33,7 @@ export class MovieController {
   @Get('/all')
   @Public()
   @ApiOperation({ summary: 'Get all movies' })
-  findAll(@Query() query: PaginationDto) {
+  findAll(@Query() query: PaginationWithFilterDto) {
     return this.movieService.findAll(query);
   }
 

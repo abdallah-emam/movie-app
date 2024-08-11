@@ -25,3 +25,9 @@ export class PaginationDto {
   @ApiProperty({ required: false })
   sort?: string;
 }
+
+export class PaginationWithFilterDto extends PaginationDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  genre?: [string];
+}
