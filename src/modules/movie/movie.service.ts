@@ -27,10 +27,10 @@ export class MovieService {
     @Inject('CACHE_MANAGER') private cacheManager: Cache,
   ) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
-    // this.fetchGenres();
+    this.fetchGenres();
   }
 
-  private async fetchGenres(): Promise<{ [key: number]: string }> {
+  async fetchGenres(): Promise<{ [key: number]: string }> {
     const cacheKey = 'genres';
     let genreMap = await this.cacheManager.get<{ [key: number]: string }>(
       cacheKey,
@@ -40,9 +40,9 @@ export class MovieService {
       const response = await axios.get(
         `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.TMDB_API_KEY}`,
       );
-      const genres = response.data.genres;
+      const genres = response?.data?.genres;
       genreMap = {};
-      genres.forEach((genre) => {
+      genres?.forEach((genre) => {
         genreMap[genre.id] = genre.name;
       });
       await this.cacheManager.set(cacheKey, genreMap, 86400); // Cache  for 1 day
