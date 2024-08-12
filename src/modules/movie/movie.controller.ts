@@ -26,46 +26,49 @@ export class MovieController {
   constructor(private readonly movieService: MovieService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create new movie for admin only' })
-  create(@Body() createMovieDto: CreateMovieDto) {
-    return this.movieService.create(createMovieDto);
+  async create(@Body() createMovieDto: CreateMovieDto) {
+    return await this.movieService.create(createMovieDto);
   }
 
   @Get('/all')
-  @Roles(Role.USER)
+  @Roles(Role.USER, Role.ADMIN)
   @ApiOperation({ summary: 'Get all movies' })
-  findAll(
+  async findAll(
     @GetUser() user: UserDocument,
     @Query() query: PaginationWithFilterDto,
   ) {
-    return this.movieService.findAll(query, user);
+    return await this.movieService.findAll(query, user);
   }
 
   @Get(':id')
-  @Roles(Role.USER)
+  @Roles(Role.USER, Role.ADMIN)
   @ApiOperation({ summary: 'Get movie by id' })
-  findOne(@Param('id') id: string) {
-    return this.movieService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return await this.movieService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Update movie by id for admin only' })
-  update(@Param('id') id: string, @Body() updateMovieDto: UpdateMovieDto) {
-    return this.movieService.update(id, updateMovieDto);
+  async update(
+    @Param('id') id: string,
+    @Body() updateMovieDto: UpdateMovieDto,
+  ) {
+    return await this.movieService.update(id, updateMovieDto);
   }
 
   @Delete(':id')
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Delete movie by id for admin only' })
-  remove(@Param('id') id: string) {
-    return this.movieService.remove(id);
+  async remove(@Param('id') id: string) {
+    return await this.movieService.remove(id);
   }
 
   @Post(':id/rate')
   @Roles(Role.USER)
   async rateMovie(@Param('id') id: string, @Body() { rating }: RatingBodyDto) {
-    return this.movieService.rateMovie(id, rating);
+    return await this.movieService.rateMovie(id, rating);
   }
 }

@@ -1,3 +1,4 @@
+import { Cache } from '@nestjs/cache-manager';
 import { BadRequestException } from '@nestjs/common';
 import { getModelToken } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -9,13 +10,13 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { MovieService } from './movie.service';
-
 jest.mock('axios');
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe('MovieService', () => {
   let service: MovieService;
   let movieModel: Model<Movie>;
+  let cacheManager: Cache;
 
   const mockMovieModel = {
     create: jest.fn(),
@@ -26,6 +27,13 @@ describe('MovieService', () => {
     save: jest.fn(),
   };
 
+  const mockCacheManager = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    store: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -34,11 +42,16 @@ describe('MovieService', () => {
           provide: getModelToken('Movie'),
           useValue: mockMovieModel,
         },
+        {
+          provide: 'CACHE_MANAGER',
+          useValue: mockCacheManager,
+        },
       ],
     }).compile();
 
     service = module.get<MovieService>(MovieService);
     movieModel = module.get<Model<Movie>>(getModelToken('Movie'));
+    cacheManager = module.get<Cache>('CACHE_MANAGER');
   });
 
   afterEach(() => {
@@ -50,7 +63,8 @@ describe('MovieService', () => {
   });
 
   describe('create', () => {
-    it('should create a movie', async () => {
+    it('should create a movie and invalidate list caches', async () => {
+      // Arrange
       const createMovieDto: CreateMovieDto = {
         title: 'Inception',
         image: 'inception.jpg',
@@ -59,8 +73,9 @@ describe('MovieService', () => {
         genres: ['Action', 'Sci-Fi'],
       };
       mockMovieModel.create.mockResolvedValue(createMovieDto);
-
+      // Act
       const result = await service.create(createMovieDto);
+      // Assert
       expect(result).toEqual(createMovieDto);
       expect(mockMovieModel.create).toHaveBeenCalledWith(createMovieDto);
     });
@@ -83,6 +98,7 @@ describe('MovieService', () => {
         total: 0,
       };
 
+      mockCacheManager.get.mockResolvedValue(null);
       mockMovieModel.aggregate.mockResolvedValue([
         { data: [], metadata: [{ total: 0 }] },
       ]);
@@ -90,6 +106,31 @@ describe('MovieService', () => {
       const result = await service.findAll(paginationWithFilterDto, user);
       expect(result).toEqual(expectedResult);
       expect(mockMovieModel.aggregate).toHaveBeenCalled();
+      expect(mockCacheManager.set).toHaveBeenCalled();
+    });
+
+    it('should return cached movies if available', async () => {
+      const user = { favoriteMovies: [] } as UserDocument;
+      const paginationWithFilterDto: PaginationWithFilterDto = {
+        searchField: '',
+        searchText: '',
+        page: 1,
+        limit: 10,
+        sort: '-releaseDate',
+        genre: ['Action'],
+      };
+
+      const cachedResult = {
+        data: [],
+        total: 0,
+      };
+
+      mockCacheManager.get.mockResolvedValue(cachedResult);
+
+      const result = await service.findAll(paginationWithFilterDto, user);
+      expect(result).toEqual(cachedResult);
+      expect(mockCacheManager.get).toHaveBeenCalled();
+      expect(mockMovieModel.aggregate).not.toHaveBeenCalled();
     });
   });
 
@@ -98,16 +139,31 @@ describe('MovieService', () => {
       const movieId = 'someId';
       const expectedMovie = { title: 'Inception' };
 
+      mockCacheManager.get.mockResolvedValue(null);
       mockMovieModel.findById.mockResolvedValue(expectedMovie);
 
       const result = await service.findOne(movieId);
       expect(result).toEqual(expectedMovie);
       expect(mockMovieModel.findById).toHaveBeenCalledWith(movieId);
+      expect(mockCacheManager.set).toHaveBeenCalled();
+    });
+
+    it('should return cached movie if available', async () => {
+      const movieId = 'someId';
+      const expectedMovie = { title: 'Inception' };
+
+      mockCacheManager.get.mockResolvedValue(expectedMovie);
+
+      const result = await service.findOne(movieId);
+      expect(result).toEqual(expectedMovie);
+      expect(mockCacheManager.get).toHaveBeenCalled();
+      expect(mockMovieModel.findById).not.toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if movie not found', async () => {
       const movieId = 'someId';
 
+      mockCacheManager.get.mockResolvedValue(null);
       mockMovieModel.findById.mockResolvedValue(null);
 
       await expect(service.findOne(movieId)).rejects.toThrow(
@@ -117,7 +173,7 @@ describe('MovieService', () => {
   });
 
   describe('update', () => {
-    it('should update a movie', async () => {
+    it('should update a movie and invalidate caches', async () => {
       const movieId = 'someId';
       const updateMovieDto: UpdateMovieDto = { title: 'Updated Title' };
 
@@ -128,7 +184,9 @@ describe('MovieService', () => {
       expect(mockMovieModel.findByIdAndUpdate).toHaveBeenCalledWith(
         movieId,
         updateMovieDto,
+        { new: true },
       );
+      expect(mockCacheManager.del).toHaveBeenCalledTimes(1); // movie cache and list caches
     });
 
     it('should throw BadRequestException if movie not found', async () => {
@@ -144,7 +202,7 @@ describe('MovieService', () => {
   });
 
   describe('remove', () => {
-    it('should remove a movie', async () => {
+    it('should remove a movie and invalidate caches', async () => {
       const movieId = 'someId';
 
       mockMovieModel.findByIdAndUpdate.mockResolvedValue({});
@@ -154,6 +212,7 @@ describe('MovieService', () => {
       expect(mockMovieModel.findByIdAndUpdate).toHaveBeenCalledWith(movieId, {
         removed: true,
       });
+      expect(mockCacheManager.del).toHaveBeenCalledTimes(1); // movie cache and list caches
     });
 
     it('should throw BadRequestException if movie not found', async () => {
@@ -218,14 +277,31 @@ describe('MovieService', () => {
         { id: 1, name: 'Action' },
         { id: 2, name: 'Comedy' },
       ];
+      const returnGenres = { 1: 'Action', 2: 'Comedy' };
       mockedAxios.get.mockResolvedValue({ data: { genres } });
+      mockCacheManager.get.mockResolvedValue(null);
       //act
       const result = await service['fetchGenres']();
       //assert
-      expect(result).toEqual({ 1: 'Action', 2: 'Comedy' });
+      expect(result).toEqual(returnGenres);
       expect(mockedAxios.get).toHaveBeenCalledWith(
         `https://api.themoviedb.org/3/genre/movie/list?api_key=${service.TMDB_API_KEY}`,
       );
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        'genres',
+        returnGenres,
+        86400,
+      );
+    });
+
+    it('should return cached genres if available', async () => {
+      const cachedGenres = [{ id: 1, name: 'Action' }];
+      mockCacheManager.get.mockResolvedValue(cachedGenres);
+
+      const result = await service.fetchGenres();
+
+      expect(result).toEqual(cachedGenres);
+      expect(mockCacheManager.get).toHaveBeenCalledWith('genres');
     });
   });
 

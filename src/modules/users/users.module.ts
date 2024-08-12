@@ -14,11 +14,12 @@ import { UsersService } from './users.service';
 
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: `.env.${process.env.NODE_ENV}`,
     }),
     PassportModule,
     JwtModule.register({
       global: true,
-      secret: `secret`,
+      secret: `${process.env.JWT_SECRET}`,
       signOptions: { expiresIn: '5d' },
     }),
   ],
