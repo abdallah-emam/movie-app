@@ -9,9 +9,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { Roles } from 'src/common/decorators/roles.decorators';
-import { PaginationWithFilterDto } from 'src/utilities/classes';
+import { GetUser } from '../../common/decorators/get-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorators';
+import { PaginationWithFilterDto } from '../../utilities/classes';
 import { UserDocument } from '../users/entities/user.entity';
 import { Role } from '../users/enum/role.enum';
 import { CreateMovieDto } from './dto/create-movie.dto';

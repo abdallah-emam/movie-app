@@ -1,9 +1,9 @@
 import { Body, Controller, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { Roles } from 'src/common/decorators/roles.decorators';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
+import { Roles } from '../../common/decorators/roles.decorators';
 import { Serialize } from '../../common/interceptors/serialize.interceptor';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { UserResponseDto, UserSerializerDto } from './dto/response.dto';

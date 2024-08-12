@@ -3,8 +3,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
 import mongoose, { Model } from 'mongoose';
-import { PaginationWithFilterDto } from 'src/utilities/classes';
-import { aggregationPipeline } from 'src/utilities/helper';
+import { PaginationWithFilterDto } from '../../utilities/classes';
+import { aggregationPipeline } from '../../utilities/helper';
 import { UserDocument } from '../users/entities/user.entity';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
@@ -17,7 +17,7 @@ export class MovieService {
 
   constructor(@InjectModel('Movie') private readonly movieModel: Model<Movie>) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
-    // this.fetchAndStoreMovies();
+    // this.fetchGenres();
   }
 
   private async fetchGenres(): Promise<{ [key: number]: string }> {
@@ -29,6 +29,7 @@ export class MovieService {
     genres.forEach((genre) => {
       genreMap[genre.id] = genre.name;
     });
+    console.log('🚀 ~ MovieService ~ fetchGenres ~ genreMap:', genreMap);
     return genreMap;
   }
 
@@ -53,7 +54,7 @@ export class MovieService {
           tmdbId: movie.id,
         });
         if (!existingMovie) {
-          const movieDocument = new this.movieModel({
+          await this.movieModel.create({
             tmdbId: movie.id,
             title: movie.title,
             overview: movie.overview,
@@ -63,7 +64,7 @@ export class MovieService {
             type: 'popular',
             tmdbRating: movie.vote_average,
           });
-          await movieDocument.save();
+          // await movieDocument.save();
           // this.logger.log(`Movie "${movie.title}" added to the database. `);
         } else {
           // this.logger.log(
@@ -167,8 +168,8 @@ export class MovieService {
     };
   }
 
-  findOne(id: string) {
-    const movie = this.movieModel.findById(id);
+  async findOne(id: string) {
+    const movie = await this.movieModel.findById(id);
     if (!movie) throw new BadRequestException('Movie Not Found');
     return movie;
   }
@@ -181,8 +182,10 @@ export class MovieService {
     };
   }
 
-  remove(id: string) {
-    const movie = this.movieModel.findByIdAndUpdate(id, { removed: true });
+  async remove(id: string) {
+    const movie = await this.movieModel.findByIdAndUpdate(id, {
+      removed: true,
+    });
     if (!movie) throw new BadRequestException('Movie Not Found');
     return {
       message: 'Movie removed successfully',

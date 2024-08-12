@@ -13,10 +13,6 @@ export class CreateMovieDto {
   @ApiProperty({ type: String, example: 'matrix.jpg' })
   image: string;
 
-  // adult
-  @ApiProperty({ type: Boolean, example: false })
-  adult: boolean;
-
   // genre
   @ApiProperty({ type: [String], example: ['Action', 'Sci-Fi'] })
   genres: string[];
