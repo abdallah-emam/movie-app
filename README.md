@@ -53,12 +53,12 @@ $ npm run test:cov
 
 ## Environment Variables
 
-MONGO_URI=mongodb://localhost:27017
-JWT_SECRET=secret
-TMDB_API_KEY=f6fb5899bd0ef8f974fcedbdfb319014
-PORT=3000
-REDIS_HOST=localhost
-REDIS_PORT=6379
+. MONGO_URI=mongodb://localhost:27017
+. JWT_SECRET=secret
+. TMDB_API_KEY=f6fb5899bd0ef8f974fcedbdfb319014
+. PORT=3000
+. REDIS_HOST=localhost
+. REDIS_PORT=6379
 
 ## API Documentation
 
