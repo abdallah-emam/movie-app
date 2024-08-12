@@ -39,7 +39,6 @@ export class MovieController {
     @GetUser() user: UserDocument,
     @Query() query: PaginationWithFilterDto,
   ) {
-    console.log('🚀 ~ MovieController ~ findOne ~ user:', user);
     return this.movieService.findAll(query, user);
   }
 

@@ -13,12 +13,6 @@ describe('UsersService', () => {
   let service: UsersService;
   let userModel: Model<UserDocument>;
 
-  jest.mock('bcryptjs', () => ({
-    genSalt: jest.fn().mockResolvedValue('mockedSalt'),
-    hash: jest.fn().mockResolvedValue('hashedPassword'),
-    compare: jest.fn(),
-  }));
-
   const mockUserModel = {
     findOne: jest.fn(),
     create: jest.fn(),
@@ -222,6 +216,44 @@ describe('UsersService', () => {
         password: 'abdallah123',
         role: Role.USER,
       });
+    });
+  });
+
+  describe('toggleFavorite', () => {
+    it('should add the movie to favorites if not already present', async () => {
+      // Arrange
+      const user = {
+        _id: 'userId',
+        favoriteMovies: [],
+        save: jest.fn().mockResolvedValue(true),
+      } as any as UserDocument;
+      const movieId = 'movieId';
+
+      // Act
+      const result = await service.toggleFavorite(user, movieId);
+
+      // Assert
+      expect(user.favoriteMovies).toContain(movieId);
+      expect(user.save).toHaveBeenCalled();
+      expect(result).toBe(user);
+    });
+
+    it('should remove the movie from favorites if already present', async () => {
+      // Arrange
+      const user = {
+        _id: 'userId',
+        favoriteMovies: ['movieId'],
+        save: jest.fn().mockResolvedValue(true),
+      } as any as UserDocument;
+      const movieId = 'movieId';
+
+      // Act
+      const result = await service.toggleFavorite(user, movieId);
+
+      // Assert
+      expect(user.favoriteMovies).not.toContain(movieId);
+      expect(user.save).toHaveBeenCalled();
+      expect(result).toBe(user);
     });
   });
 });
