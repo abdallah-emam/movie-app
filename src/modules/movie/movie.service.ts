@@ -78,7 +78,7 @@ export class MovieService {
     this.logger.verbose('Movies successfully stored in MongoDB database.');
   }
 
-  async rateMovie(_id: string, rating: number): Promise<Movie> {
+  async rateMovie(_id: string, rating: number): Promise<{ message: string }> {
     if (rating < 0 || rating > 10) {
       throw new BadRequestException('Rating must be between 0 and 10');
     }
@@ -97,7 +97,9 @@ export class MovieService {
 
     await movie.save();
 
-    return movie;
+    return {
+      message: 'Rating added successfully',
+    };
   }
 
   create(createMovieDto: CreateMovieDto) {

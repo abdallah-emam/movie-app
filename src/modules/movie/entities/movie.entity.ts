@@ -24,10 +24,6 @@ export class Movie {
   @Prop({ type: String })
   image: string;
 
-  // adult
-  @Prop({ type: Boolean })
-  adult: boolean;
-
   // genre
   @Prop({ type: [String] })
   genres: string[];

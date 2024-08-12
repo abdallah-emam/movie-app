@@ -202,7 +202,9 @@ describe('MovieService', () => {
 
       const result = await service.rateMovie(movieId, rating);
 
-      expect(result).toEqual(movie);
+      expect(result).toEqual({
+        message: 'Rating added successfully',
+      });
       expect(movie.userRatings).toContain(rating);
       expect(movie.averageRating).toBe(6);
       expect(movie.save).toHaveBeenCalled();

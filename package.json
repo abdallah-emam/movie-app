@@ -83,8 +83,9 @@
       "!**/common/**/*",
       "!**/filters/**/*",
       "!**/users/jwt.strategy.ts",
-      "!**/users/entities/**/*",
-      "!**/users/module.ts",
+      "!**/entities/**/*",
+      "!**/module.ts",
+      "!**/entities/**/*",
       "!**/middlewares/**/*",
       "!**/*main.{js,jsx,ts,tsx}"
     ],
