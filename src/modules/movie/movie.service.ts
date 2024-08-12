@@ -1,8 +1,15 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { Cache } from '@nestjs/cache-manager';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
 import axios from 'axios';
-import mongoose, { Model } from 'mongoose';
+import { Model } from 'mongoose';
+
 import { PaginationWithFilterDto } from '../../utilities/classes';
 import { aggregationPipeline } from '../../utilities/helper';
 import { UserDocument } from '../users/entities/user.entity';
@@ -15,21 +22,35 @@ export class MovieService {
   TMDB_API_KEY: string;
   private readonly logger = new Logger(MovieService.name);
 
-  constructor(@InjectModel('Movie') private readonly movieModel: Model<Movie>) {
+  constructor(
+    @InjectModel('Movie') private readonly movieModel: Model<Movie>,
+    @Inject('CACHE_MANAGER') private cacheManager: Cache,
+  ) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
     // this.fetchGenres();
   }
 
   private async fetchGenres(): Promise<{ [key: number]: string }> {
-    const response = await axios.get(
-      `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.TMDB_API_KEY}`,
+    const cacheKey = 'genres';
+    let genreMap = await this.cacheManager.get<{ [key: number]: string }>(
+      cacheKey,
     );
-    const genres = response.data.genres;
-    const genreMap: { [key: number]: string } = {};
-    genres.forEach((genre) => {
-      genreMap[genre.id] = genre.name;
-    });
-    console.log('🚀 ~ MovieService ~ fetchGenres ~ genreMap:', genreMap);
+
+    if (!genreMap) {
+      const response = await axios.get(
+        `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.TMDB_API_KEY}`,
+      );
+      const genres = response.data.genres;
+      genreMap = {};
+      genres.forEach((genre) => {
+        genreMap[genre.id] = genre.name;
+      });
+      await this.cacheManager.set(cacheKey, genreMap, 86400); // Cache  for 1 day
+      this.logger.debug('Genres cached');
+    } else {
+      this.logger.debug('Genres retrieved from cache');
+    }
+
     return genreMap;
   }
 
@@ -102,7 +123,8 @@ export class MovieService {
     };
   }
 
-  create(createMovieDto: CreateMovieDto) {
+  async create(createMovieDto: CreateMovieDto) {
+    await this.invalidateListCaches();
     return this.movieModel.create(createMovieDto);
   }
 
@@ -117,6 +139,18 @@ export class MovieService {
     }: PaginationWithFilterDto,
     user: UserDocument,
   ): Promise<any> {
+    const cacheKey = `movies_all_${page}_${limit}_${sort}_${genre}_${searchField}_${searchText}`;
+    const cachedMovies = await this.cacheManager.get<any>(cacheKey);
+
+    if (cachedMovies) {
+      this.logger.debug('cachedMovies for all movies retrieved from cache');
+      cachedMovies.data = cachedMovies.data.map((movie) => ({
+        ...movie,
+        isFavorite: user.favoriteMovies.includes(movie._id.toString()),
+      }));
+      return cachedMovies;
+    }
+
     if (!sort) {
       sort = '-releaseDate';
     }
@@ -138,12 +172,6 @@ export class MovieService {
       {
         $addFields: {
           averageRating: { $ifNull: ['$averageRating', 0] },
-          isFavorite: {
-            $in: [
-              '$_id',
-              user.favoriteMovies.map((id) => new mongoose.Types.ObjectId(id)),
-            ],
-          },
         },
       },
       {
@@ -164,21 +192,52 @@ export class MovieService {
         },
       },
     ]);
-    return {
+
+    const result = {
       data: data[0].data,
       total: data[0].metadata[0]?.total || 0,
     };
+
+    // Cache the result without user-specific fields
+    await this.cacheManager.set(cacheKey, result, 3600000); // Cache for 1 hour
+
+    // Add user-specific fields before returning
+    result.data = result.data.map((movie) => ({
+      ...movie,
+      isFavorite: user.favoriteMovies.includes(movie._id.toString()),
+    }));
+
+    return result;
   }
 
+  // async findOne(id: string) {
+  //   const movie = await this.movieModel.findById(id);
+  //   if (!movie) throw new BadRequestException('Movie Not Found');
+  //   return movie;
+  // }
   async findOne(id: string) {
+    const cacheKey = `movie_${id}`;
+    const cachedMovie = await this.cacheManager.get<Movie>(cacheKey);
+
+    if (cachedMovie) {
+      return cachedMovie;
+    }
+
     const movie = await this.movieModel.findById(id);
     if (!movie) throw new BadRequestException('Movie Not Found');
+
+    await this.cacheManager.set(cacheKey, movie, 3600000); // Cache for 10 minutes
+
     return movie;
   }
 
   async update(id: string, updateMovieDto: UpdateMovieDto) {
-    const movie = await this.movieModel.findByIdAndUpdate(id, updateMovieDto);
+    const movie = await this.movieModel.findByIdAndUpdate(id, updateMovieDto, {
+      new: true,
+    });
     if (!movie) throw new BadRequestException('Movie Not Found');
+    await this.cacheManager.del(`movie_${id}`);
+    await this.invalidateListCaches();
     return {
       message: 'Movie updated successfully',
     };
@@ -189,8 +248,24 @@ export class MovieService {
       removed: true,
     });
     if (!movie) throw new BadRequestException('Movie Not Found');
+    await this.cacheManager.del(`movie_${id}`);
+    await this.invalidateListCaches();
     return {
       message: 'Movie removed successfully',
     };
+  }
+
+  private async invalidateListCaches() {
+    const cacheManagerStore = this.cacheManager.store;
+    if (typeof cacheManagerStore.keys === 'function') {
+      const keys = await cacheManagerStore.keys();
+      const listCacheKeys = keys.filter((key) => key.startsWith('movies_all_'));
+      for (const key of listCacheKeys) {
+        await this.cacheManager.del(key);
+      }
+      this.logger.debug('Invalidated list caches');
+    } else {
+      this.logger.warn('Cache store does not support key listing');
+    }
   }
 }
