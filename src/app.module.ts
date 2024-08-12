@@ -3,13 +3,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { AppLoggerMiddleware } from './middlewares/logger.middleware';
+import { MovieModule } from './modules/movie/movie.module';
 import { RolesGuard } from './modules/users/guard/roles.guard';
 import { JwtAuthGuard } from './modules/users/guard/user.guard';
 import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.env.${process.env.NODE_ENV}`,
@@ -23,6 +26,7 @@ import { UsersModule } from './modules/users/users.module';
       }),
     }),
     UsersModule,
+    MovieModule,
   ],
   controllers: [],
   providers: [

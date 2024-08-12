@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { UserDto, UserResponseDto } from './dto/response.dto';
+import { UserResponseDto, UserSerializerDto } from './dto/response.dto';
+import { UserDocument } from './entities/user.entity';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -8,7 +9,7 @@ describe('UsersController', () => {
   let controller: UsersController;
   let service: UsersService;
 
-  let data = new UserDto();
+  let data = new UserSerializerDto();
   data = {
     _id: '1',
     createdAt: new Date(),
@@ -18,12 +19,14 @@ describe('UsersController', () => {
     role: 'user',
     token: 'token',
     removed: false,
+    favoriteMovies: [],
   };
   let mockUserResponseDto = new UserResponseDto();
 
   const mockUsersService = {
     login: jest.fn(),
     register: jest.fn().mockResolvedValue(mockUserResponseDto),
+    toggleFavorite: jest.fn().mockResolvedValue(mockUserResponseDto),
   };
 
   beforeEach(async () => {
@@ -74,6 +77,18 @@ describe('UsersController', () => {
 
     // Act
     const result = await controller.register(body as RegisterDto);
+
+    // Assert
+    expect(result).toEqual(mockUserResponseDto);
+  });
+
+  it('should toggle favorite movie', async () => {
+    // Arrange
+    const movieId = '1';
+    const user: UserDocument = {} as UserDocument;
+    mockUsersService.toggleFavorite.mockResolvedValue(mockUserResponseDto);
+    // Act
+    const result = await controller.toggleFavorite(user, movieId);
 
     // Assert
     expect(result).toEqual(mockUserResponseDto);

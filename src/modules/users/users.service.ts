@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { User } from './entities/user.entity';
+import { User, UserDocument } from './entities/user.entity';
 import { Role } from './enum/role.enum';
 import { PayloadInterface } from './interfaces/payload.interface';
 
@@ -77,6 +77,17 @@ export class UsersService {
         token,
       },
     };
+  }
+
+  async toggleFavorite(user: UserDocument, movieId: string): Promise<any> {
+    const isFavorite = user.favoriteMovies.includes(movieId);
+    if (isFavorite) {
+      user.favoriteMovies = user.favoriteMovies.filter((id) => id !== movieId);
+    } else {
+      user.favoriteMovies.push(movieId);
+    }
+    await user.save();
+    return user;
   }
 
   // findAll() {
