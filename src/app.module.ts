@@ -17,8 +17,8 @@ import { UsersModule } from './modules/users/users.module';
     CacheModule.register({
       isGlobal: true,
       store: redisStore,
-      host: 'localhost', // Update with your Redis host
-      port: 6379, // Update with your Redis port
+      host: `${process.env.REDIS_HOST}`, // Update with your Redis host
+      port: `${process.env.REDIS_PORT}`, // Update with your Redis port
       ttl: 600, // Time to live (in seconds)
     }),
     ScheduleModule.forRoot(),

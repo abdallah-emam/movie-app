@@ -27,7 +27,7 @@ export class MovieService {
     @Inject('CACHE_MANAGER') private cacheManager: Cache,
   ) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
-    this.fetchGenres();
+    // this.fetchGenres();
   }
 
   async fetchGenres(): Promise<{ [key: number]: string }> {
