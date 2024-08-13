@@ -9,6 +9,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from 'src/common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorators';
 import { PaginationWithFilterDto } from '../../utilities/classes';
@@ -30,6 +31,13 @@ export class MovieController {
   @ApiOperation({ summary: 'Create new movie for admin only' })
   async create(@Body() createMovieDto: CreateMovieDto) {
     return await this.movieService.create(createMovieDto);
+  }
+
+  @Get('/get-third-party-movies')
+  @Public()
+  @ApiOperation({ summary: 'Fetch movies from third party api' })
+  fetchAndStoreMovies() {
+    return this.movieService.fetchAndStoreMovies();
   }
 
   @Get('/all')
