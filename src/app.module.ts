@@ -14,12 +14,14 @@ import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
-    CacheModule.register({
+    CacheModule.registerAsync({
       isGlobal: true,
-      store: redisStore,
-      host: `${process.env.REDIS_HOST}`, // Update with your Redis host
-      port: `${process.env.REDIS_PORT}`, // Update with your Redis port
-      ttl: 600, // Time to live (in seconds)
+      inject: [ConfigService],
+      useFactory: async (config: ConfigService) => ({
+        store: redisStore,
+        host: config.get<string>('REDIS_HOST'),
+        port: Number(config.get<string>('REDIS_PORT')),
+      }),
     }),
     ScheduleModule.forRoot(),
     ConfigModule.forRoot({
