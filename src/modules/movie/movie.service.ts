@@ -69,7 +69,7 @@ export class MovieService {
   async fetchAndStoreMovies() {
     const genreMap = await this.fetchGenres();
     let page = 1;
-    let totalPages = 1;
+    const totalPages = 100;
 
     while (page <= totalPages) {
       try {
@@ -78,7 +78,7 @@ export class MovieService {
         );
 
         const movies = response?.data?.results;
-        totalPages = response?.data?.total_pages;
+        // totalPages = response?.data?.total_pages;
 
         for (const movie of movies) {
           const existingMovie = await this.movieModel.findOne({
