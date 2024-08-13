@@ -6,10 +6,6 @@
 
 This project is a movie API service built with Nest.js and MongoDB. It allows users to perform various actions such as rating movies, adding them to a watchlist, and marking them as favorites. The project utilizes Redis for caching and implements JWT-based authentication and authorization.
 
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
 ## Feature
 
 - User Authentication: JWT-based authentication.
