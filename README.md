@@ -22,23 +22,36 @@ This project is a movie API service built with Nest.js and MongoDB. It allows us
 - Scheduled Tasks: Perform scheduled tasks using NestJS Schedule Module.
 - Logging: Custom middleware for logging requests.
 
-## Installation
+## Environment Variables
+
+To run this project, you will need to add the following environment variables to your .env file
+
+`MONGO_URI`: mongodb://localhost:27017
+
+`JWT_SECRET`: secret
+
+`TMDB_API_KEY`: f6fb5899bd0ef8f974fcedbdfb319014
+
+`PORT`: f6fb5899bd0ef8f974fcedbdfb319014
+
+`REDIS_HOST`: f6fb5899bd0ef8f974fcedbdfb319014
+
+`REDIS_PORT`: f6fb5899bd0ef8f974fcedbdfb319014
+
+## Normal Installation and Running the app
+
+- You have to have preinstalled node.js v20, redis and mongoDB then make as follow
 
 ```bash
 $ npm install
+
+$ npm run start:dev
 ```
 
-## Running the app
+## Running with Docker compose
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+$ docker-compose up
 ```
 
 ## Test
@@ -51,19 +64,6 @@ $ npm run test
 $ npm run test:cov
 ```
 
-## Environment Variables
-
-- MONGO_URI=mongodb://localhost:27017
-- JWT_SECRET=secret
-- TMDB_API_KEY=f6fb5899bd0ef8f974fcedbdfb319014
-- PORT=3000
-- REDIS_HOST=localhost
-- REDIS_PORT=6379
-
 ## API Documentation
 
-API documentation is available via Swagger. To access the documentation, start the application and navigate to http://localhost:{PORT}/api.
-
-## Stay in touch
-
-- Email - [Abdallah Hamdy](abdallah.h.emam@gamil.com)
+[Documentation](http://localhost:8080/api)
