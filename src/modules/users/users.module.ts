@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
@@ -12,16 +12,25 @@ import { UsersService } from './users.service';
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
 
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV}`,
+    JwtModule.registerAsync({
+      imports: [],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get('JWT_SECRET'),
+        signOptions: { expiresIn: '5d' },
+      }),
     }),
     PassportModule,
-    JwtModule.register({
-      global: true,
-      secret: `${process.env.JWT_SECRET}`,
-      signOptions: { expiresIn: '5d' },
-    }),
+
+    // ConfigModule.forRoot({
+    //   isGlobal: true,
+    //   envFilePath: `.env.${process.env.NODE_ENV}`,
+    // }),
+    // JwtModule.register({
+    //   global: true,
+    //   secret: `${process.env.JWT_SECRET}`,
+    //   signOptions: { expiresIn: '5d' },
+    // }),
   ],
   controllers: [UsersController],
   providers: [UsersService, JwtStrategy],
