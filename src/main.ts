@@ -13,7 +13,7 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
-  // add global filters for catching all exceptions comes from mongoose validator
+  //  global filters for catching all exceptions comes from mongoose validator and others
   app.useGlobalFilters(new AllExceptionsFilter());
 
   const authOptions = {
@@ -37,6 +37,7 @@ async function bootstrap() {
   const whitelist = [
     //allow localhost
     'http://localhost:3000',
+    'http://localhost:8080',
     //allow frontend to access
     //'https://movie.frontend.com',
   ];

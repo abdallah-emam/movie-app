@@ -2,23 +2,15 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: nestjs-app
-    working_dir: /usr/src/app
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
+    build: .
     ports:
       - '8080:3000'
     environment:
       - MONGO_URI=mongodb://mongo
-      - JWT_SECRET=secret
-      - TMDB_API_KEY=f6fb5899bd0ef8f974fcedbdfb319014
-      - PORT=3000
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - JWT_SECRET=secret
+      - TMDB_API_KEY=f6fb5899bd0ef8f974fcedbdfb319014
     depends_on:
       - mongo
       - redis
@@ -27,15 +19,14 @@ services:
     image: mongo:latest
     container_name: mongo
     ports:
-      - '27018:27017' # Change the host port to 27018 to avoid conflicts
+      - '27018:27017'
     volumes:
       - mongo-data:/data/db
 
   redis:
-    image: redis:latest
+    image: redis:6.0.7
     container_name: redis
     ports:
       - '6379:6379'
-
 volumes:
   mongo-data:
