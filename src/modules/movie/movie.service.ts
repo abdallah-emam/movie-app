@@ -27,31 +27,39 @@ export class MovieService {
     @Inject('CACHE_MANAGER') private cacheManager: Cache,
   ) {
     this.TMDB_API_KEY = process.env.TMDB_API_KEY;
-    // this.fetchGenres();
+  }
+
+  async onModuleInit() {
+    console.log('onModuleInit');
+    await this.fetchAndStoreMovies();
   }
 
   async fetchGenres(): Promise<{ [key: number]: string }> {
-    const cacheKey = 'genres';
-    let genreMap = await this.cacheManager.get<{ [key: number]: string }>(
-      cacheKey,
-    );
-
-    if (!genreMap) {
-      const response = await axios.get(
-        `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.TMDB_API_KEY}`,
+    try {
+      const cacheKey = 'genres';
+      let genreMap = await this.cacheManager.get<{ [key: number]: string }>(
+        cacheKey,
       );
-      const genres = response?.data?.genres;
-      genreMap = {};
-      genres?.forEach((genre) => {
-        genreMap[genre.id] = genre.name;
-      });
-      await this.cacheManager.set(cacheKey, genreMap, 86400); // Cache  for 1 day
-      this.logger.debug('Genres cached');
-    } else {
-      this.logger.debug('Genres retrieved from cache');
-    }
 
-    return genreMap;
+      if (!genreMap) {
+        const response = await axios.get(
+          `https://api.themoviedb.org/3/genre/movie/list?api_key=${this.TMDB_API_KEY}`,
+        );
+        const genres = response?.data?.genres;
+        genreMap = {};
+        genres?.forEach((genre) => {
+          genreMap[genre.id] = genre.name;
+        });
+        await this.cacheManager.set(cacheKey, genreMap, 86400); // Cache  for 1 day
+        this.logger.debug('Genres cached');
+      } else {
+        this.logger.debug('Genres retrieved from cache');
+      }
+
+      return genreMap;
+    } catch (error) {
+      this.logger.error(error);
+    }
   }
 
   // this method will be run at 3 AM Egypt time
@@ -61,37 +69,42 @@ export class MovieService {
   async fetchAndStoreMovies() {
     const genreMap = await this.fetchGenres();
     let page = 1;
-    let totalPages = 1;
+    const totalPages = 100;
 
     while (page <= totalPages) {
-      const response = await axios.get(
-        `https://api.themoviedb.org/3/movie/popular?api_key=${this.TMDB_API_KEY}&page=${page}`,
-      );
-      const movies = response.data.results;
-      totalPages = response.data.total_pages;
+      try {
+        const response = await axios.get(
+          `https://api.themoviedb.org/3/movie/popular?api_key=${this.TMDB_API_KEY}&page=${page}`,
+        );
 
-      for (const movie of movies) {
-        const existingMovie = await this.movieModel.findOne({
-          tmdbId: movie.id,
-        });
-        if (!existingMovie) {
-          await this.movieModel.create({
+        const movies = response?.data?.results;
+        // totalPages = response?.data?.total_pages;
+
+        for (const movie of movies) {
+          const existingMovie = await this.movieModel.findOne({
             tmdbId: movie.id,
-            title: movie.title,
-            overview: movie.overview,
-            releaseDate: movie.release_date,
-            genres: movie.genre_ids.map((id) => genreMap[id]), // Convert genre IDs to names
-            averageRating: movie.vote_average,
-            type: 'popular',
-            tmdbRating: movie.vote_average,
           });
-          // await movieDocument.save();
-          // this.logger.log(`Movie "${movie.title}" added to the database. `);
-        } else {
-          // this.logger.log(
-          //   `Movie "${movie.title}" already exists in the database.`,
-          // );
+          if (!existingMovie) {
+            await this.movieModel.create({
+              tmdbId: movie.id,
+              title: movie.title,
+              overview: movie.overview,
+              releaseDate: movie.release_date,
+              genres: movie.genre_ids.map((id) => genreMap[id]), // Convert genre IDs to names
+              averageRating: movie.vote_average,
+              type: 'popular',
+              tmdbRating: movie.vote_average,
+            });
+            // await movieDocument.save();
+            // this.logger.log(`Movie "${movie.title}" added to the database. `);
+          } else {
+            // this.logger.log(
+            //   `Movie "${movie.title}" already exists in the database.`,
+            // );
+          }
         }
+      } catch (error) {
+        this.logger.error(error);
       }
       page++;
     }
