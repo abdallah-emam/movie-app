@@ -21,7 +21,7 @@ export class User {
   @Prop({ type: String, enum: Role, default: Role.USER })
   role: Role;
 
-  @Prop({ type: [String], default: [] }) // array of movie ids
+  @Prop({ type: [String], default: [] })
   favoriteMovies: string[];
 
   @Prop({
